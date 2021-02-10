@@ -1,0 +1,43 @@
+---
+title: "sradb"
+author: "Joselynn"
+date: "2/10/2021"
+output: html_document
+---
+
+```{r}
+library(SRAdb)
+```
+
+#code where I am figuring out how to use sradb
+```{r}
+sqlfile <- file.path(system.file('extdata', package='SRAdb'),'SRAmetadb_demo.sqlite')
+sra_con <- dbConnect(RSQLite::SQLite(),sqlfile)
+sra_tables <- dbListTables(sra_con)
+sra_tables
+lapply(sra_tables, dbListFields, conn = sra_con)
+getSRA(search_terms = "Mus musculus", out_types = 'sra', sra_con)
+dbGetQuery(sra_con,'PRAGMA TABLE_INFO(sra)')
+dbGetQuery(sra_con, "SELECT * FROM sra WHERE taxon_id = 10090 AND library_source = 'TRANSCRIPTOMIC' AND library_layout like 'PAIRED%'")
+```
+# Download SRAdb
+```{r}
+system("wget https://s3.amazonaws.com/starbuck1/sradb/SRAmetadb.sqlite.gz")
+system("gunzip SRAmetadb.sqlite.gz")
+```
+
+#set up sql connections
+```{r}
+sqlfile <- 'SRAmetadb.sqlite'
+sra_con <- dbConnect(RSQLite::SQLite(),sqlfile)
+```
+
+# Search for 500 mouse PE transcriptomes
+```{r}
+mouse_pe_transcriptomes <- dbGetQuery(sra_con, "SELECT run_accession FROM sra WHERE taxon_id = 10090 AND library_source = 'TRANSCRIPTOMIC' AND library_layout like 'PAIRED%' AND run_accession like 'SRR%' limit 500")
+```
+
+```{r}
+write.table(mouse_pe_transcriptomes, file = 'mouse_pe_transcriptomes.txt')
+```
+
